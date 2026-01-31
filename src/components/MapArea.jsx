@@ -145,7 +145,27 @@ const PopupContent = ({ features, activeOccurrence }) => {
                         </div>
                     );
                 })}
+
             </div>
+
+            {/* 3D Model Button for ID 414 */}
+            {features.some(f => String(f.properties.objectid) === '414') && (
+                <div
+                    className="p-2 bg-slate-100 border-t border-slate-200"
+                    dangerouslySetInnerHTML={{
+                        __html: `
+                        <button 
+                            onclick="window.trigger3DModal && window.trigger3DModal()" 
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded flex items-center justify-center gap-2 transition-colors text-xs uppercase tracking-wide shadow-sm"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                            Visualizar Modelo 3D
+                        </button>
+                        `
+                    }}
+                />
+            )}
+
             <div className="p-2 bg-slate-100 text-[10px] text-center text-slate-400 rounded-b-lg border-t border-slate-200">
                 Total de Ocorrências: {features.length}
             </div>
@@ -190,9 +210,19 @@ const MapClickHandler = ({ isAddingMode, onMapClick }) => {
     return null;
 };
 
-const MapArea = ({ layers, activeOccurrence, isAddingMode, onMapClick }) => {
+const MapArea = ({ layers, activeOccurrence, isAddingMode, onMapClick, onOpen3D }) => {
     const layerRefs = useRef({});
     const [flyToPosition, setFlyToPosition] = useState(null);
+
+    // Expose 3D trigger to window for popup buttons
+    useEffect(() => {
+        if (onOpen3D) {
+            window.trigger3DModal = onOpen3D;
+        }
+        return () => {
+            delete window.trigger3DModal;
+        };
+    }, [onOpen3D]);
 
     // Identify active occurrence location
     useEffect(() => {
@@ -215,14 +245,9 @@ const MapArea = ({ layers, activeOccurrence, isAddingMode, onMapClick }) => {
             layerRefs.current[id] = layer;
         }
 
-        // Aggregate features by objectid OR roughly same location
+        // Aggregate features by roughly same location
         const sameLocationFeatures = layers.ocorrencias_consolidated.features.filter(f => {
-            // Priority: Match objectid
-            // objectid is numeric ID of the static location Point
-            if (feature.properties.objectid && f.properties.objectid) {
-                return String(feature.properties.objectid) === String(f.properties.objectid);
-            }
-            // Fallback: Coordinates
+            // Match by Coordinates (approx 11cm tolerance)
             const [lng1, lat1] = f.geometry.coordinates;
             const [lng2, lat2] = feature.geometry.coordinates;
             return Math.abs(lng1 - lng2) < 0.000001 && Math.abs(lat1 - lat2) < 0.000001;

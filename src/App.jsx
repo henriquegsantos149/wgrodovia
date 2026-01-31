@@ -6,6 +6,7 @@ import { loadAllData } from './utils/dataLoader';
 import { Loader2 } from 'lucide-react';
 
 import OccurrenceFormModal from './components/OccurrenceFormModal';
+import Model3DModal from './components/Model3DModal';
 
 function App() {
   const [layers, setLayers] = useState({});
@@ -20,6 +21,9 @@ function App() {
 
   // Mobile Sidebar State
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  // 3D Model State
+  const [is3DModalOpen, setIs3DModalOpen] = useState(false);
 
   useEffect(() => {
     const initData = async () => {
@@ -95,6 +99,12 @@ function App() {
         coordinates={newCoordinates}
       />
 
+      {/* 3D Model Modal */}
+      <Model3DModal
+        isOpen={is3DModalOpen}
+        onClose={() => setIs3DModalOpen(false)}
+      />
+
       {/* Adding Mode Indicator Overlay */}
       {isAddingMode && (
         <div className="absolute top-16 md:top-4 left-1/2 transform -translate-x-1/2 z-[1000] bg-blue-600 text-white px-4 py-2 rounded-full shadow-xl animate-pulse font-bold border-2 border-white pointer-events-none text-xs md:text-base w-11/12 md:w-auto text-center">
@@ -130,6 +140,7 @@ function App() {
           activeOccurrence={activeOccurrence}
           isAddingMode={isAddingMode}
           onMapClick={handleMapClick}
+          onOpen3D={() => setIs3DModalOpen(true)}
         />
       </div>
     </div>
